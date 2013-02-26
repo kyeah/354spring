@@ -9,6 +9,10 @@ using namespace std;
 
 struct joint_info
 {
+  joint_info() {}
+joint_info(unsigned char _type, char *_name, 
+           unsigned int _id) : type(_type), name(_name), id(_id) {}
+
 	unsigned char type; // 0=root, 1=joint, 2=end site
 	unsigned int id;
 	unsigned int parent;

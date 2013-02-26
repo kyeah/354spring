@@ -37,6 +37,9 @@ void Keyboard(unsigned char key, int x, int y);
 void Idle();
 
 SceneGraph sg;
+bool animate = false;
+float *channels;
+TreeNode joint;
 
 #define PI 3.14159265f
 
@@ -196,6 +199,54 @@ void DrawBounds() {
   }
 }
 
+void Joint() {
+  /*cout << "joint " << joint.id << endl;
+  if (joint.id == 6) {
+    cout << "name " << joint.name << endl;
+    cout << "offsets " << joint.offset[0] << " " << joint.offset[1] << " " << joint.offset[2] << endl;
+    cout << "numchans " << joint.numchans << endl;
+    }*/
+  //DO STUFF
+  if (joint.type == BVH_END_SITE) return;
+
+  glPushMatrix();
+  glTranslatef(joint.offset[0], joint.offset[1], joint.offset[2]);
+  for (int i = 0; i < joint.numchans; i++) {
+    switch (joint.order[i]) {
+    case BVH_XPOS_IDX: 
+      glTranslatef(channels[joint.index+i], 0, 0);
+      break;
+    case BVH_YPOS_IDX: 
+      glTranslatef(0, channels[joint.index+i], 0);
+      break;
+    case BVH_ZPOS_IDX:
+      glTranslatef(0, 0, channels[joint.index+i]);
+      break;
+    case BVH_XROT_IDX: 
+      glRotatef(channels[joint.index+i], 1, 0, 0);
+      break;
+    case BVH_YROT_IDX: 
+      glRotatef(channels[joint.index+i], 0, 1, 0);
+      break;
+    case BVH_ZROT_IDX:
+      glRotatef(channels[joint.index+i], 0, 0, 1);
+    }
+  }
+  
+  glBegin(GL_POINTS);
+  glColor3f(0, 0, 0);
+  glVertex3f(0, 0, 0);
+  glEnd();
+
+  vector<unsigned int> joint_children = joint.children;
+  int numchildren = joint.children.size();
+  for (int i = 0; i < numchildren; i++) {
+    joint = sg.joints[joint_children[i]];
+    Joint();
+  }
+  glPopMatrix();
+}
+
 void Display() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -208,7 +259,10 @@ void Display() {
   SetDrawMode();
   DrawFloor(800, 800, 80, 80);
 
-  // TODO: draw scene graph and animate
+  cout << sg.currentFrame << endl;
+  channels = sg.frames[sg.currentFrame];
+  joint = sg.joints[0];
+  Joint();
 
   if (showAxis) DrawAxis();
   if (showBounds) DrawBounds();
@@ -283,8 +337,7 @@ void Keyboard(unsigned char key, int x, int y) {
       ComputeLookAt();
       break;
     case ' ':
-      // TODO
-      cout << "Start/stop animation" << endl;
+      animate = !animate;
       break;
     case 'a':
       showAxis=!showAxis;
@@ -303,6 +356,10 @@ void Keyboard(unsigned char key, int x, int y) {
 }
 
 void Idle() {
+  if (animate) {
+    sg.SetCurrentFrame((sg.currentFrame+1)%sg.numFrames);
+    glutPostRedisplay();
+  }
 }
 
 void processCommandLine(int argc, char *argv[]) {

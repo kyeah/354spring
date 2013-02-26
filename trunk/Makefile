@@ -58,7 +58,7 @@ $(OBJS): %.o: %.cpp
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $< -o $@
 
 $(PROD):  $(OBJS)
-	./cpplint.py --filter=-readability/todo,-readability/streams,-runtime/threadsafe_fn,-legal,-build/namespaces,-build/header_guard main.cpp joint.h joint.cpp
+#	./cpplint.py --filter=-readability/todo,-readability/streams,-runtime/threadsafe_fn,-legal,-build/namespaces,-build/header_guard main.cpp joint.h joint.cpp
 	$(CC) -o $(PROD) $^ $(LIBS)
 
 clean:

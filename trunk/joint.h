@@ -9,16 +9,35 @@
 
 using namespace std;
 
-typedef struct treenode {
-  mat m;
-  void (*f)();
-  struct treenode *sibling;
-  struct treenode *child;
-} treenode;
+struct TreeNode
+{
+  TreeNode() {}
+  TreeNode(unsigned char _type, char *_name,
+             unsigned int _id) : type(_type), name(_name), id(_id) {}
+
+  unsigned char type; // 0=root, 1=joint, 2=end site                                               
+  unsigned int id;
+  unsigned int parent;
+  vector<unsigned int> children;
+  char * name;
+  unsigned int numchans;
+  unsigned short chanflags;
+  unsigned int index;
+  int order[6];
+  float offset[3];
+};
+
 
 class SceneGraph {
  public:
   SceneGraph() {}
+  TreeNode root;
+  float frameTime;
+  uint32_t numFrames, frameSize, currentFrame;
+  unsigned int last_id;
+  vector<TreeNode> joints;
+  vector<float*> frames;
+
   void CreateRoot(const char * name, uint32_t id);
   void CreateJoint(const char * name, uint32_t id);
   void CreateEndSite(const char * name, uint32_t id);
