@@ -4,13 +4,13 @@
 #include <vector>
 #include <cstring>
 
+#include "./common.h"
 #include "./bvh_defs.h"
 #include "./vec.h"
 
 using namespace std;
 
-struct TreeNode
-{
+struct TreeNode {
   TreeNode() {}
   TreeNode(unsigned char _type, char *_name,
              unsigned int _id) : type(_type), name(_name), id(_id) {}
@@ -25,7 +25,30 @@ struct TreeNode
   unsigned int index;
   int order[6];
   float offset[3];
+  
+  void draw() {
+    glColor3f(0, 0, 0);
+    glutSolidSphere(.15, 10, 10);
+  }
 };
+
+struct Connector {
+  Connector() {}
+Connector(float *off, float w, float h, float d) : width(w), height(h), depth(d) {
+  for (int i = 0; i < 3; i++) 
+    offset[i] = off[i];
+}
+  float offset[3];
+  float width, height, depth;
+  void draw() {
+    glBegin(GL_LINES);
+    glColor3f(0, 0, 0);
+    glVertex3f(0, 0, 0);
+    glVertex3fv(offset);
+    glEnd();
+  }
+};
+
 
 
 class SceneGraph {
@@ -36,6 +59,7 @@ class SceneGraph {
   uint32_t numFrames, frameSize, currentFrame;
   unsigned int last_id;
   vector<TreeNode> joints;
+  vector<Connector> connectors;
   vector<float*> frames;
 
   void CreateRoot(const char * name, uint32_t id);

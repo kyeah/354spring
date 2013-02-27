@@ -29,6 +29,12 @@ using namespace std;
 int window_width = 800, window_height = 600;
 float window_aspect = window_width/static_cast<float>(window_height);
 
+float fps = 60;
+float frame_tick = 0;
+float previousTime;
+
+float zoom_speed = 2;
+
 // callback prototypes
 void InitGL();
 void Display();
@@ -73,6 +79,13 @@ void InitGL() {
 
   // resize the window
   Resize(window_width, window_height);
+}
+
+void resetCamera() {
+  for (int i = 0; i < 3; i++) {
+    bbox.min.x[i] = -100;
+    bbox.max.x[i] = 100;
+  }
 }
 
 void ComputeLookAt() {
@@ -200,44 +213,48 @@ void DrawBounds() {
 }
 
 void Joint() {
-  /*cout << "joint " << joint.id << endl;
-  if (joint.id == 6) {
-    cout << "name " << joint.name << endl;
-    cout << "offsets " << joint.offset[0] << " " << joint.offset[1] << " " << joint.offset[2] << endl;
-    cout << "numchans " << joint.numchans << endl;
-    }*/
-  //DO STUFF
-  if (joint.type == BVH_END_SITE) return;
-
   glPushMatrix();
+  sg.connectors[joint.id].draw();
   glTranslatef(joint.offset[0], joint.offset[1], joint.offset[2]);
-  for (int i = 0; i < joint.numchans; i++) {
-    switch (joint.order[i]) {
-    case BVH_XPOS_IDX: 
-      glTranslatef(channels[joint.index+i], 0, 0);
-      break;
-    case BVH_YPOS_IDX: 
-      glTranslatef(0, channels[joint.index+i], 0);
-      break;
-    case BVH_ZPOS_IDX:
-      glTranslatef(0, 0, channels[joint.index+i]);
-      break;
-    case BVH_XROT_IDX: 
-      glRotatef(channels[joint.index+i], 1, 0, 0);
-      break;
-    case BVH_YROT_IDX: 
-      glRotatef(channels[joint.index+i], 0, 1, 0);
-      break;
-    case BVH_ZROT_IDX:
-      glRotatef(channels[joint.index+i], 0, 0, 1);
-    }
-  }
   
-  glBegin(GL_POINTS);
-  glColor3f(0, 0, 0);
-  glVertex3f(0, 0, 0);
-  glEnd();
+  if (joint.type != BVH_END_SITE) {
+    
+    for (int i = 0; i < joint.numchans; i++) {
+      switch (joint.order[i]) {
+      case BVH_XPOS_IDX: 
+        glTranslatef(channels[joint.index+i], 0, 0);
+        break;
+      case BVH_YPOS_IDX: 
+        glTranslatef(0, channels[joint.index+i], 0);
+        break;
+      case BVH_ZPOS_IDX:
+        glTranslatef(0, 0, channels[joint.index+i]);
+        break;
+      case BVH_XROT_IDX: 
+        glRotatef(channels[joint.index+i], 1, 0, 0);
+        break;
+      case BVH_YROT_IDX: 
+        glRotatef(channels[joint.index+i], 0, 1, 0);
+        break;
+      case BVH_ZROT_IDX:
+        glRotatef(channels[joint.index+i], 0, 0, 1);
+      }
+    }
+  
+  }
 
+  joint.draw();
+
+  /*glPushMatrix();
+  //  glColor3fv(colors[(next_col++)%colors.size()]);
+  glColor3f((float)rand()/(float)RAND_MAX,
+            (float)rand()/(float)RAND_MAX,
+            (float)rand()/(float)RAND_MAX);
+  glScalef(1, 2, 1);
+  glutSolidCube(2);
+  glPopMatrix();
+  */
+  
   vector<unsigned int> joint_children = joint.children;
   int numchildren = joint.children.size();
   for (int i = 0; i < numchildren; i++) {
@@ -259,7 +276,6 @@ void Display() {
   SetDrawMode();
   DrawFloor(800, 800, 80, 80);
 
-  cout << sg.currentFrame << endl;
   channels = sg.frames[sg.currentFrame];
   joint = sg.joints[0];
   Joint();
@@ -304,26 +320,29 @@ void Keyboard(unsigned char key, int x, int y) {
   switch (key) {
     case '1':
       waypoint = 1;
+      resetCamera();
       ComputeLookAt();
       break;
     case '2':
       waypoint = 2;
+      resetCamera();
       ComputeLookAt();
       break;
     case '3':
       waypoint = 3;
+      resetCamera();
       ComputeLookAt();
       break;
     case 'z':
       v = (eye - center).unit();
-      bbox.min -= v;
-      bbox.max -= v;
+      bbox.min -= v*zoom_speed;
+      bbox.max -= v*zoom_speed;
       ComputeLookAt();
       break;
     case 'Z':
       v = (eye - center).unit();
-      bbox.min += v;
-      bbox.max += v;
+      bbox.min += v*zoom_speed;
+      bbox.max += v*zoom_speed;
       ComputeLookAt();
       break;
     case 'j':
@@ -356,8 +375,16 @@ void Keyboard(unsigned char key, int x, int y) {
 }
 
 void Idle() {
+  // Maintains a constant FPS
+  float currentTime = glutGet(GLUT_ELAPSED_TIME);
+  float elapsed_time = currentTime - previousTime;
+  
+  frame_tick += fps*elapsed_time/1000;
+  frame_tick = fmodf(frame_tick, sg.numFrames);
+  previousTime = currentTime;
+  
   if (animate) {
-    sg.SetCurrentFrame((sg.currentFrame+1)%sg.numFrames);
+    sg.SetCurrentFrame(static_cast<int>(frame_tick));
     glutPostRedisplay();
   }
 }
