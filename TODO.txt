@@ -3,3 +3,5 @@ texture mapping (check pocket article)
 shadows
 multiple models
 orbiting and correct? zooming
+camera movement with mouse / strafing
+rigging?!
