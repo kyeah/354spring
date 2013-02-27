@@ -3,17 +3,19 @@
 
 #include <vector>
 #include <cstring>
+#include <cmath>
 
-#include "./common.h"
 #include "./bvh_defs.h"
+#include "./common.h"
+#include "./connector.h"
 #include "./vec.h"
 
 using namespace std;
 
 struct TreeNode {
   TreeNode() {}
-  TreeNode(unsigned char _type, char *_name,
-             unsigned int _id) : type(_type), name(_name), id(_id) {}
+  TreeNode(unsigned char _type, char *_name, unsigned int _id, 
+           float conn_radius=1) : type(_type), name(_name), id(_id), connector_radius(conn_radius) {}
 
   unsigned char type; // 0=root, 1=joint, 2=end site                                               
   unsigned int id;
@@ -25,31 +27,13 @@ struct TreeNode {
   unsigned int index;
   int order[6];
   float offset[3];
+  float connector_radius;
   
   void draw() {
     glColor3f(0, 0, 0);
     glutSolidSphere(.15, 10, 10);
   }
 };
-
-struct Connector {
-  Connector() {}
-Connector(float *off, float w, float h, float d) : width(w), height(h), depth(d) {
-  for (int i = 0; i < 3; i++) 
-    offset[i] = off[i];
-}
-  float offset[3];
-  float width, height, depth;
-  void draw() {
-    glBegin(GL_LINES);
-    glColor3f(0, 0, 0);
-    glVertex3f(0, 0, 0);
-    glVertex3fv(offset);
-    glEnd();
-  }
-};
-
-
 
 class SceneGraph {
  public:

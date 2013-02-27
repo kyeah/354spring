@@ -16,7 +16,6 @@
 #include <cstring>
 
 #include "./common.h"
-
 #include "./types.h"
 #include "./bvh_defs.h"
 #include "./joint.h"
@@ -104,10 +103,14 @@ void ComputeLookAt() {
 }
 
 void SetLighting() {
-  glShadeModel(GL_FLAT);
-  glDisable(GL_LIGHTING);
+  glShadeModel(GL_SMOOTH);
+  /*glDisable(GL_LIGHTING);
   glDisable(GL_LIGHT0);
   glDisable(GL_COLOR_MATERIAL);
+  */
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+  glEnable(GL_COLOR_MATERIAL);
 }
 
 void SetCamera() {
@@ -136,6 +139,7 @@ void DrawAxis() {
 
   glLineWidth(2.0);
 
+  glDisable(GL_LIGHTING);
   glBegin(GL_LINES);
 
   glColor3f(1, 0, 0);
@@ -151,6 +155,7 @@ void DrawAxis() {
   glVertex3fv((c+Z).x);
 
   glEnd();
+  glEnable(GL_LIGHTING);
 }
 
 void DrawFloor(float W, float H, float w, float h) {
@@ -160,10 +165,11 @@ void DrawFloor(float W, float H, float w, float h) {
   int i = 0, j = 0;
   Vec3f u = {w, 0, 0}, v = {0, 0, h}, r = {-(N/2)*w, 0, -(M/2)*h};
   Vec3f p0, p1, p2, p3;
+  glDisable(GL_LIGHTING);
   glEnable(GL_POLYGON_SMOOTH);
   glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
   glBegin(GL_QUADS);
-  glColor3f(0.7, 0.7, 0.7);
+  glColor3f(0.5, 0.5, 0.5);
   for (j = 0; j < N; j++) {
     p0 = r+u*static_cast<float>(j%2);
     for (i = j%2; i < M; i += 2) {
@@ -181,6 +187,7 @@ void DrawFloor(float W, float H, float w, float h) {
     r += v;
   }
   glEnd();
+  glEnable(GL_LIGHTING);
 }
 
 void DrawRect(const Vec3f & u, const Vec3f & v, const Vec3f & o) {

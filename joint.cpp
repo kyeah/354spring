@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <iostream>
+#include <string>
 
 #include "./joint.h"
 
@@ -22,8 +23,15 @@ void SceneGraph::CreateJoint(const char * name, uint32_t id) {
   strcpy(copy, s.c_str());
   
   joints.push_back(TreeNode(1, copy, id));
-  connectors.push_back(Connector());
   last_id++;
+  
+  string slim[] = {"Toe", "Finger", "Hand", "Foot", "Thumb"};
+  for (int i = 0; i < 5; i++)
+    if (s.find(slim[i]) != string::npos) {
+      connectors.push_back(Connector(.3, .15));
+      return;
+    }
+  connectors.push_back(Connector());
 }
 
 void SceneGraph::CreateEndSite(const char * name, uint32_t id) {
@@ -32,7 +40,7 @@ void SceneGraph::CreateEndSite(const char * name, uint32_t id) {
   strcpy(copy, s.c_str());
   
   joints.push_back(TreeNode(2, copy, id));
-  connectors.push_back(Connector());
+  connectors.push_back(Connector(.3, .15));
   last_id++;
 }
 
@@ -46,6 +54,10 @@ void SceneGraph::SetOffset(uint32_t id, float * offset) {
     joints[id].offset[i] = offset[i];
     connectors[id].offset[i] = offset[i];
   }
+  
+  connectors[id].height = sqrt(offset[0]*offset[0] + 
+                               offset[1]*offset[1] + 
+                               offset[2]*offset[2]);
 }
 
 void SceneGraph::SetNumChannels(uint32_t id, uint16_t num) {
