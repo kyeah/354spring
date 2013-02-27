@@ -1,0 +1,5 @@
+head => give connector a type (head/joint)
+texture mapping (check pocket article)
+shadows
+multiple models
+orbiting and correct? zooming
