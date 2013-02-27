@@ -12,6 +12,7 @@ void SceneGraph::CreateRoot(const char * name, uint32_t id) {
   
   root = TreeNode(0, copy, id);
   joints.push_back(root);
+  connectors.push_back(Connector());
   last_id++;
 }
 
@@ -21,6 +22,7 @@ void SceneGraph::CreateJoint(const char * name, uint32_t id) {
   strcpy(copy, s.c_str());
   
   joints.push_back(TreeNode(1, copy, id));
+  connectors.push_back(Connector());
   last_id++;
 }
 
@@ -30,6 +32,7 @@ void SceneGraph::CreateEndSite(const char * name, uint32_t id) {
   strcpy(copy, s.c_str());
   
   joints.push_back(TreeNode(2, copy, id));
+  connectors.push_back(Connector());
   last_id++;
 }
 
@@ -41,6 +44,7 @@ void SceneGraph::SetChild(uint32_t parent, uint32_t child) {
 void SceneGraph::SetOffset(uint32_t id, float * offset) {
   for (int i = 0; i < 3; i++) {
     joints[id].offset[i] = offset[i];
+    connectors[id].offset[i] = offset[i];
   }
 }
 
