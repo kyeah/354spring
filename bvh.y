@@ -208,12 +208,12 @@ int load_bvh(const char * filename)
 	}
 	yyin=file;
 	yylineno=1;
-	do
-	{
-		yyparse();
-	}
-	while(!feof(yyin));
-	return 0;
+        do
+          {
+            yyparse();
+          }
+        while(!feof(yyin));
+        return 0;
 }
 
 void yyerror(const char * s)
