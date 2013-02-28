@@ -8,6 +8,7 @@
 // C++ library includes
 #include <cstdlib>
 #include <cmath>
+#include <climits>
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -25,11 +26,13 @@
 
 using namespace std;
 
+enum drawStyle { DRAW_JOINT, DRAW_LINES, DRAW_FULL };
+
 // window parameters
 int window_width = 800, window_height = 600;
 float window_aspect = window_width/static_cast<float>(window_height);
 
-float fps = 60;
+unsigned int fps = 60;
 float frame_tick = 0;
 float previousTime;
 
@@ -47,6 +50,7 @@ vector<SceneGraph> scenegraphs;
 bool animate = false;
 float *channels;
 TreeNode joint;
+enum drawStyle draw_style = DRAW_FULL;
 
 #define PI 3.14159265f
 
@@ -232,7 +236,16 @@ void DrawBounds() {
 
 void Joint(int i) {
   glPushMatrix();
-  scenegraphs[i].connectors[joint.id].draw();
+  if (draw_style == DRAW_FULL)
+    scenegraphs[i].connectors[joint.id].draw();
+  else if (draw_style == DRAW_LINES) {
+    glBegin(GL_LINES);
+    glColor3f(0, 0, 0);
+    glVertex3f(0, 0, 0);
+    glVertex3fv(joint.offset);
+    glEnd();
+  }
+
   glTranslatef(joint.offset[0], joint.offset[1], joint.offset[2]);
 
   if (joint.type != BVH_END_SITE) {
@@ -337,48 +350,59 @@ void Keyboard(unsigned char key, int x, int y) {
   Vec3f v;
 
   switch (key) {
-    case '1':
-      waypoint = 1;
-      resetCamera();
-      ComputeLookAt();
+  case '1':
+    waypoint = 1;
+    resetCamera();
+    ComputeLookAt();
+    break;
+  case '2':
+    waypoint = 2;
+    resetCamera();
+    ComputeLookAt();
+    break;
+  case '3':
+    waypoint = 3;
+    resetCamera();
+    ComputeLookAt();
+    break;
+  case 'z':
+    v = (eye - center).unit();
+    eye -= v*zoom_speed;
+    break;
+  case 'Z':
+    v = (eye - center).unit();
+    eye += v*zoom_speed;
       break;
-    case '2':
-      waypoint = 2;
-      resetCamera();
-      ComputeLookAt();
+  case 'j':
+    orbit(1);
+    break;
+  case 'k':
+    orbit(-1);
+    break;
+  case 'n':
+    if (fps > 1) fps -= 2;
+    break;
+  case 'm':
+    if (fps < INT_MAX) fps += 2;
+    break;
+  case 'f':
+    if (draw_style == DRAW_JOINT) draw_style = DRAW_LINES;
+    else if (draw_style == DRAW_LINES) draw_style = DRAW_FULL;
+    else if (draw_style == DRAW_FULL) draw_style = DRAW_JOINT;
+    break;
+  case ' ':
+    animate=!animate;
+    break;
+  case 'a':
+    showAxis=!showAxis;
+    break;
+  case 'b':
+    showBounds=!showBounds;
       break;
-    case '3':
-      waypoint = 3;
-      resetCamera();
-      ComputeLookAt();
-      break;
-    case 'z':
-      v = (eye - center).unit();
-      eye -= v*zoom_speed;
-      break;
-    case 'Z':
-      v = (eye - center).unit();
-      eye += v*zoom_speed;
-      break;
-    case 'j':
-      orbit(1);
-      break;
-    case 'k':
-      orbit(-1);
-      break;
-    case ' ':
-      animate=!animate;
-      break;
-    case 'a':
-      showAxis=!showAxis;
-      break;
-    case 'b':
-      showBounds=!showBounds;
-      break;
-    case 'q':
-    case 27:  // esc
-      exit(0);
-      break;
+  case 'q':
+  case 27:  // esc
+    exit(0);
+    break;
   }
 
   // let glut know to redraw the screen
@@ -429,6 +453,9 @@ void showMenu() {
   cout << "Z - zoom out" << endl;
   cout << "j - rotate left" << endl;
   cout << "k - rotate right" << endl;
+  cout << "n - slow down animation" << endl;
+  cout << "m - speed up animation" << endl;
+  cout << "f - change drawstyle " << endl;
   cout << "[SPACE] - start/stop" << endl;
 }
 
