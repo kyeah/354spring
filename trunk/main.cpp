@@ -32,7 +32,8 @@ float fps = 60;
 float frame_tick = 0;
 float previousTime;
 
-float zoom_speed = 2;
+float zoom_speed = 5;
+float orbit_speed = .2f;
 
 // callback prototypes
 void InitGL();
@@ -41,7 +42,7 @@ void Resize(int width, int height);
 void Keyboard(unsigned char key, int x, int y);
 void Idle();
 
-SceneGraph sg;
+vector<SceneGraph> scenegraphs;
 bool animate = false;
 float *channels;
 TreeNode joint;
@@ -52,6 +53,13 @@ Vec3f eye, center, up;
 int waypoint = 1;
 
 BoundingBox bbox = {{-100, -100, -100}, {100, 100, 100}};
+
+// lighting
+GLfloat light_ambient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+GLfloat light_diffuse[] = { 0.0f, 1.0f, 1.0f, 1.0f };
+GLfloat light_specular[] = { 0, 1.0f, 1.0f, 1.0f };
+GLfloat light_position[] = { 0, 10, 3, 0 };
+GLfloat light_direction[] = { 1, 1, -1, 0 };
 
 char filename[1000];
 
@@ -80,13 +88,6 @@ void InitGL() {
   Resize(window_width, window_height);
 }
 
-void resetCamera() {
-  for (int i = 0; i < 3; i++) {
-    bbox.min.x[i] = -100;
-    bbox.max.x[i] = 100;
-  }
-}
-
 void ComputeLookAt() {
   float maxDist = (bbox.max-bbox.min).max();
   center = (bbox.max+bbox.min)/2.0f;
@@ -102,14 +103,24 @@ void ComputeLookAt() {
   axisLen = maxDist*0.05f;
 }
 
+void resetCamera() {
+  Vec3f min = {-100, -100, -100}, max = {100, 100, 100};  
+  Vec3f offset = {0, 0, 0};
+  bbox.min = min;
+  bbox.max = max;
+  ComputeLookAt();
+}
+
+
 void SetLighting() {
   glShadeModel(GL_SMOOTH);
-  /*glDisable(GL_LIGHTING);
-  glDisable(GL_LIGHT0);
-  glDisable(GL_COLOR_MATERIAL);
-  */
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
+  glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+  glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, light_direction);
   glEnable(GL_COLOR_MATERIAL);
 }
 
@@ -219,9 +230,9 @@ void DrawBounds() {
   }
 }
 
-void Joint() {
+void Joint(int i) {
   glPushMatrix();
-  sg.connectors[joint.id].draw();
+  scenegraphs[i].connectors[joint.id].draw();
   glTranslatef(joint.offset[0], joint.offset[1], joint.offset[2]);
   
   if (joint.type != BVH_END_SITE) {
@@ -252,21 +263,11 @@ void Joint() {
 
   joint.draw();
 
-  /*glPushMatrix();
-  //  glColor3fv(colors[(next_col++)%colors.size()]);
-  glColor3f((float)rand()/(float)RAND_MAX,
-            (float)rand()/(float)RAND_MAX,
-            (float)rand()/(float)RAND_MAX);
-  glScalef(1, 2, 1);
-  glutSolidCube(2);
-  glPopMatrix();
-  */
-  
   vector<unsigned int> joint_children = joint.children;
   int numchildren = joint.children.size();
-  for (int i = 0; i < numchildren; i++) {
-    joint = sg.joints[joint_children[i]];
-    Joint();
+  for (int j = 0; j < numchildren; j++) {
+    joint = scenegraphs[i].joints[joint_children[j]];
+    Joint(i);
   }
   glPopMatrix();
 }
@@ -283,9 +284,11 @@ void Display() {
   SetDrawMode();
   DrawFloor(800, 800, 80, 80);
 
-  channels = sg.frames[sg.currentFrame];
-  joint = sg.joints[0];
-  Joint();
+  for (int i = 0; i < scenegraphs.size(); i++) {
+    channels = scenegraphs[i].frames[scenegraphs[i].currentFrame];
+    joint = scenegraphs[i].joints[0];
+    Joint(i);
+  }
 
   if (showAxis) DrawAxis();
   if (showBounds) DrawBounds();
@@ -315,6 +318,16 @@ void Resize(int width, int height) {
   glutPostRedisplay();
 }
 
+void orbit(int dir) {
+  float ex = eye[0], ez = eye[2];
+  float r = sqrt(ex*ex + ez*ez);
+  float theta = atan2(ez, ex) + 2*PI;
+  
+  theta += dir*orbit_speed;
+  eye[0] = r*cos(theta);
+  eye[2] = r*sin(theta);
+}
+
 // This function is called whenever the user hits letters or numbers
 // on the keyboard.  The 'key' variable has the character the user hit,
 // and x and y tell where the mouse was when it was hit.
@@ -322,6 +335,7 @@ void Keyboard(unsigned char key, int x, int y) {
   y = window_height - y;
 
   float sgn = 1.0f;
+  float ex, ez;
   Vec3f v;
 
   switch (key) {
@@ -342,28 +356,20 @@ void Keyboard(unsigned char key, int x, int y) {
       break;
     case 'z':
       v = (eye - center).unit();
-      bbox.min -= v*zoom_speed;
-      bbox.max -= v*zoom_speed;
-      ComputeLookAt();
+      eye -= v*zoom_speed;
       break;
     case 'Z':
       v = (eye - center).unit();
-      bbox.min += v*zoom_speed;
-      bbox.max += v*zoom_speed;
-      ComputeLookAt();
+      eye += v*zoom_speed;
       break;
     case 'j':
-      // TODO
-      cout << "Orbit left" << endl;
-      ComputeLookAt();
+      orbit(1);
       break;
     case 'k':
-      // TODO
-      cout << "Orbit right" << endl;
-      ComputeLookAt();
+      orbit(-1);
       break;
     case ' ':
-      animate = !animate;
+      animate=!animate;
       break;
     case 'a':
       showAxis=!showAxis;
@@ -382,24 +388,35 @@ void Keyboard(unsigned char key, int x, int y) {
 }
 
 void Idle() {
+  
   // Maintains a constant FPS
   float currentTime = glutGet(GLUT_ELAPSED_TIME);
   float elapsed_time = currentTime - previousTime;
-  
-  frame_tick += fps*elapsed_time/1000;
-  frame_tick = fmodf(frame_tick, sg.numFrames);
   previousTime = currentTime;
   
   if (animate) {
-    sg.SetCurrentFrame(static_cast<int>(frame_tick));
+    frame_tick += fps*elapsed_time/1000;
+    frame_tick = fmodf(frame_tick, scenegraphs[0].numFrames);
+    
+    for(int i = 0; i < scenegraphs.size(); i++) 
+      scenegraphs[i].SetCurrentFrame(static_cast<int>(frame_tick));
     glutPostRedisplay();
-  }
+    }
+  /*  if (animate) {
+    for(int i = 0; i < scenegraphs.size(); i++) 
+      scenegraphs[i].SetCurrentFrame(scenegraphs[i].currentFrame+1);
+    glutPostRedisplay();
+    }*/
 }
 
 void processCommandLine(int argc, char *argv[]) {
   if (argc>1) {
-    snprintf(&(filename[0]), strlen(argv[1])+1, "%s", argv[1]);
-    BVHLoader::loadBVH(filename, &sg);
+    for (int i = 0; i < argc - 1; i++) {
+      SceneGraph sg;
+      snprintf(&(filename[0]), strlen(argv[i+1])+1, "%s", argv[i+1]);
+      BVHLoader::loadBVH(filename, &sg);
+      scenegraphs.push_back(sg);
+    }
     ComputeLookAt();
   } else {
     printf("Filename argument required.\n");
