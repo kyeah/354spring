@@ -14,21 +14,21 @@ using namespace std;
 
 struct TreeNode {
   TreeNode() {}
-  TreeNode(unsigned char _type, char *_name, unsigned int _id, 
-           float conn_radius=1) : type(_type), name(_name), id(_id), connector_radius(conn_radius) {}
+  TreeNode(unsigned char _type, char *_name, unsigned int _id) :
+           type(_type), name(_name), id(_id) {}
 
-  unsigned char type; // 0=root, 1=joint, 2=end site                                               
+  unsigned char type;  // 0=root, 1=joint, 2=end site
   unsigned int id;
   unsigned int parent;
   vector<unsigned int> children;
   char * name;
   unsigned int numchans;
-  unsigned short chanflags;
+  unsigned int chanflags;
   unsigned int index;
   int order[6];
   float offset[3];
   float connector_radius;
-  
+
   void draw() {
     glColor3f(0, 0, 0);
     glutSolidSphere(.15, 10, 10);
