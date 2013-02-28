@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 
+#include "./color.h"
 #include "./joint.h"
 
 using namespace std;
@@ -13,7 +14,8 @@ void SceneGraph::CreateRoot(const char * name, uint32_t id) {
 
   root = TreeNode(0, copy, id);
   joints.push_back(root);
-  connectors.push_back(Connector());
+
+  connectors.push_back(Connector(1, .5, Color::RandColor()));
   last_id++;
 }
 
@@ -29,11 +31,11 @@ void SceneGraph::CreateJoint(const char * name, uint32_t id) {
   string slim[] = {"Toe", "Finger", "Hand", "Foot", "Thumb"};
   for (int i = 0; i < 5; i++)
     if (s.find(slim[i]) != string::npos) {
-      connectors.push_back(Connector(.3, .15));
+      connectors.push_back(Connector(.3, .15, Color::RandColor()));
       return;
     }
 
-  connectors.push_back(Connector());
+  connectors.push_back(Connector(1, .5, Color::RandColor()));
 }
 
 void SceneGraph::CreateEndSite(const char * name, uint32_t id) {
@@ -41,7 +43,7 @@ void SceneGraph::CreateEndSite(const char * name, uint32_t id) {
   snprintf(copy, sizeof(name), "%s", name);
 
   joints.push_back(TreeNode(2, copy, id));
-  connectors.push_back(Connector(.3, .15));
+  connectors.push_back(Connector(.3, .15, Color::RandColor()));
   last_id++;
 }
 
