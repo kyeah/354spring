@@ -403,12 +403,11 @@ void Idle() {
 
 void processCommandLine(int argc, char *argv[]) {
   if (argc>1) {
-    for (int i = 0; i < 1/*argc - 1*/; i++) {
-      SceneGraph sg = SceneGraph();
-      snprintf(&(filename[0]), strlen(argv[i+1])+1, "%s", argv[i+1]);
+    for (int i = 1; i < argc; i++) {
+      SceneGraph sg;
+      snprintf(&(filename[0]), strlen(argv[i])+1, "%s", argv[i]);
       BVHLoader::loadBVH(filename, &sg);
       scenegraphs.push_back(sg);
-      BVHLoader::bci = bvh_cb_info();
     }
     ComputeLookAt();
   } else {

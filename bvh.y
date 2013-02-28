@@ -16,6 +16,7 @@
 		extern int yylex(void);
 	}	
 	extern void BEGIN_FL(void);
+	extern void yylex_destroy();
 	extern bvh_cb_info * bci;
 	float * frameflt=0;
 %}
@@ -213,12 +214,18 @@ int load_bvh(const char * filename)
             yyparse();
           }
         while(!feof(yyin));
+        yylex_destroy();
+        lb=0;
+        rb=0;
+        numframes=0;
+        framecnt=0;
+        framesz=0;
         return 0;
 }
 
 void yyerror(const char * s)
 {
 	cout <<"Parse error:"<<s<<" line:"<<yylineno<<endl;
-	//exit(-1);
+	exit(-1);
 }
 
