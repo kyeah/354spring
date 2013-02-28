@@ -13,13 +13,11 @@ struct Color {
   operator GLfloat*() { return c; }
   GLfloat c[3];
 
-  static Color RandColor();
+  static Color RandColor() {
+    return Color((float)rand()/(float)RAND_MAX,
+                 (float)rand()/(float)RAND_MAX,
+                 (float)rand()/(float)RAND_MAX);
+  }
 };
-
-Color Color::RandColor() {
-  return Color((float)rand()/(float)RAND_MAX,
-               (float)rand()/(float)RAND_MAX,
-               (float)rand()/(float)RAND_MAX);
-}
 
 #endif

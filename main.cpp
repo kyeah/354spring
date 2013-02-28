@@ -393,12 +393,15 @@ void Idle() {
 
   if (animate) {
     frame_tick += fps*elapsed_time/1000;
-    frame_tick = fmodf(frame_tick, scenegraphs[0].numFrames);
+    if (frame_tick < 0) frame_tick = 0;
 
-    for (int i = 0; i < scenegraphs.size(); i++)
-      scenegraphs[i].SetCurrentFrame(static_cast<int>(frame_tick));
-    glutPostRedisplay();
+    for (int i = 0; i < scenegraphs.size(); i++) {
+      int sg_frame = static_cast<int>(frame_tick);
+      sg_frame %= scenegraphs[i].numFrames;
+      scenegraphs[i].SetCurrentFrame(sg_frame);
     }
+  }
+    glutPostRedisplay();
 }
 
 void processCommandLine(int argc, char *argv[]) {
