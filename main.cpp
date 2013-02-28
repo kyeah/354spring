@@ -14,6 +14,7 @@
 #include <sstream>
 #include <cstdio>
 #include <cstring>
+#include <vector>
 
 #include "./common.h"
 #include "./types.h"
@@ -104,13 +105,12 @@ void ComputeLookAt() {
 }
 
 void resetCamera() {
-  Vec3f min = {-100, -100, -100}, max = {100, 100, 100};  
+  Vec3f min = {-100, -100, -100}, max = {100, 100, 100};
   Vec3f offset = {0, 0, 0};
   bbox.min = min;
   bbox.max = max;
   ComputeLookAt();
 }
-
 
 void SetLighting() {
   glShadeModel(GL_SMOOTH);
@@ -234,31 +234,29 @@ void Joint(int i) {
   glPushMatrix();
   scenegraphs[i].connectors[joint.id].draw();
   glTranslatef(joint.offset[0], joint.offset[1], joint.offset[2]);
-  
+
   if (joint.type != BVH_END_SITE) {
-    
     for (int i = 0; i < joint.numchans; i++) {
       switch (joint.order[i]) {
-      case BVH_XPOS_IDX: 
+      case BVH_XPOS_IDX:
         glTranslatef(channels[joint.index+i], 0, 0);
         break;
-      case BVH_YPOS_IDX: 
+      case BVH_YPOS_IDX:
         glTranslatef(0, channels[joint.index+i], 0);
         break;
       case BVH_ZPOS_IDX:
         glTranslatef(0, 0, channels[joint.index+i]);
         break;
-      case BVH_XROT_IDX: 
+      case BVH_XROT_IDX:
         glRotatef(channels[joint.index+i], 1, 0, 0);
         break;
-      case BVH_YROT_IDX: 
+      case BVH_YROT_IDX:
         glRotatef(channels[joint.index+i], 0, 1, 0);
         break;
       case BVH_ZROT_IDX:
         glRotatef(channels[joint.index+i], 0, 0, 1);
       }
     }
-  
   }
 
   joint.draw();
@@ -322,7 +320,7 @@ void orbit(int dir) {
   float ex = eye[0], ez = eye[2];
   float r = sqrt(ex*ex + ez*ez);
   float theta = atan2(ez, ex) + 2*PI;
-  
+
   theta += dir*orbit_speed;
   eye[0] = r*cos(theta);
   eye[2] = r*sin(theta);
@@ -388,30 +386,24 @@ void Keyboard(unsigned char key, int x, int y) {
 }
 
 void Idle() {
-  
   // Maintains a constant FPS
   float currentTime = glutGet(GLUT_ELAPSED_TIME);
   float elapsed_time = currentTime - previousTime;
   previousTime = currentTime;
-  
+
   if (animate) {
     frame_tick += fps*elapsed_time/1000;
     frame_tick = fmodf(frame_tick, scenegraphs[0].numFrames);
-    
-    for(int i = 0; i < scenegraphs.size(); i++) 
+
+    for (int i = 0; i < scenegraphs.size(); i++)
       scenegraphs[i].SetCurrentFrame(static_cast<int>(frame_tick));
     glutPostRedisplay();
     }
-  /*  if (animate) {
-    for(int i = 0; i < scenegraphs.size(); i++) 
-      scenegraphs[i].SetCurrentFrame(scenegraphs[i].currentFrame+1);
-    glutPostRedisplay();
-    }*/
 }
 
 void processCommandLine(int argc, char *argv[]) {
   if (argc>1) {
-    for (int i = 0; i < argc - 1; i++) {
+    for (int i = 0; i < 1/*argc - 1*/; i++) {
       SceneGraph sg = SceneGraph();
       snprintf(&(filename[0]), strlen(argv[i+1])+1, "%s", argv[i+1]);
       BVHLoader::loadBVH(filename, &sg);

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <iostream>
 #include <string>
@@ -7,10 +8,9 @@
 using namespace std;
 
 void SceneGraph::CreateRoot(const char * name, uint32_t id) {
-  string s(name, sizeof(name));
-  char *copy = new char[s.length()+1];
-  strcpy(copy, s.c_str());
-  
+  char *copy = new char[sizeof(name)+1];
+  snprintf(copy, sizeof(name), "%s", name);
+
   root = TreeNode(0, copy, id);
   joints.push_back(root);
   connectors.push_back(Connector());
@@ -19,26 +19,27 @@ void SceneGraph::CreateRoot(const char * name, uint32_t id) {
 
 void SceneGraph::CreateJoint(const char * name, uint32_t id) {
   string s(name, sizeof(name));
-  char *copy = new char[s.length()+1];
-  strcpy(copy, s.c_str());
-  
+  char *copy = new char[sizeof(name)+1];
+  snprintf(copy, sizeof(name), "%s", name);
+
   joints.push_back(TreeNode(1, copy, id));
   last_id++;
-  
+
+  // Identify slim connectors
   string slim[] = {"Toe", "Finger", "Hand", "Foot", "Thumb"};
   for (int i = 0; i < 5; i++)
     if (s.find(slim[i]) != string::npos) {
       connectors.push_back(Connector(.3, .15));
       return;
     }
+
   connectors.push_back(Connector());
 }
 
 void SceneGraph::CreateEndSite(const char * name, uint32_t id) {
-  string s(name, sizeof(name));
-  char *copy = new char[s.length()+1];
-  strcpy(copy, s.c_str());
-  
+  char *copy = new char[sizeof(name)+1];
+  snprintf(copy, sizeof(name), "%s", name);
+
   joints.push_back(TreeNode(2, copy, id));
   connectors.push_back(Connector(.3, .15));
   last_id++;
@@ -54,9 +55,9 @@ void SceneGraph::SetOffset(uint32_t id, float * offset) {
     joints[id].offset[i] = offset[i];
     connectors[id].offset[i] = offset[i];
   }
-  
-  connectors[id].height = sqrt(offset[0]*offset[0] + 
-                               offset[1]*offset[1] + 
+
+  connectors[id].height = sqrt(offset[0]*offset[0] +
+                               offset[1]*offset[1] +
                                offset[2]*offset[2]);
 }
 
@@ -91,7 +92,7 @@ void SceneGraph::SetFrameSize(uint32_t size) {
 
 void SceneGraph::AddFrame(float * data) {
   float *flts = new float[frameSize];
-  for(int i = 0; i < frameSize; i++)
+  for (int i = 0; i < frameSize; i++)
     flts[i] = data[i];
   frames.push_back(flts);
 }
