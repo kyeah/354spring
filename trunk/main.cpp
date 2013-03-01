@@ -234,6 +234,34 @@ void DrawBounds() {
   }
 }
 
+void drawOverlay() {
+  // Voodoo matrix magic for window overlay
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  gluOrtho2D(0, window_width, window_height, 0);
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+
+  // Draw info space to screen
+  glDisable(GL_LIGHTING);
+  glColor3f(1, 1, 1);
+  glRectf(7*window_width/8, window_height - 40, window_width, window_height);
+
+  // Draw text to screen
+  glColor3f(.5, .5, .5);
+  ostringstream oss;
+  oss << "FPS: " << fps;
+  const char *text_c = oss.str().c_str();
+
+  glRasterPos2i(7*window_width/8 + 12, window_height - 15);
+  glutBitmapString(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)text_c);
+
+  glEnable(GL_LIGHTING);
+  glPopMatrix();
+}
+
 void Joint(int i) {
   glPushMatrix();
   if (draw_style == DRAW_FULL)
@@ -303,6 +331,7 @@ void Display() {
 
   if (showAxis) DrawAxis();
   if (showBounds) DrawBounds();
+  drawOverlay();
 
   glFlush();          // finish the drawing commands
   glutSwapBuffers();  // and update the screen
@@ -348,6 +377,7 @@ void Keyboard(unsigned char key, int x, int y) {
   float sgn = 1.0f;
   float ex, ez;
   Vec3f v;
+  float r, theta;
 
   switch (key) {
   case '1':
@@ -365,14 +395,16 @@ void Keyboard(unsigned char key, int x, int y) {
     resetCamera();
     ComputeLookAt();
     break;
+  case 'w':
   case 'z':
     v = (eye - center).unit();
     eye -= v*zoom_speed;
     break;
+  case 's':
   case 'Z':
     v = (eye - center).unit();
     eye += v*zoom_speed;
-      break;
+    break;
   case 'j':
     orbit(1);
     break;
